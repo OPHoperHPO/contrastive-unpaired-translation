@@ -44,7 +44,6 @@ class Downsample(nn.Module):
         self.stride = stride
         self.off = int((self.stride - 1) / 2.)
         self.channels = channels
-
         filt = get_filter(filt_size=self.filt_size)
         self.register_buffer('filt', filt[None, None, :, :].repeat((self.channels, 1, 1, 1)))
 
@@ -57,6 +56,7 @@ class Downsample(nn.Module):
             else:
                 return self.pad(inp)[:, :, ::self.stride, ::self.stride]
         else:
+
             return F.conv2d(self.pad(inp), self.filt, stride=self.stride, groups=inp.shape[1])
 
 
@@ -951,7 +951,7 @@ class ResnetGenerator(nn.Module):
                 model += [nn.Conv2d(ngf * mult, ngf * mult * 2, kernel_size=3, stride=1, padding=1, bias=use_bias),
                           norm_layer(ngf * mult * 2),
                           nn.ReLU(True),
-                          Downsample(ngf * mult * 2)]
+                          nn.Conv2d(ngf * mult * 2, ngf * mult * 2, kernel_size=3, stride=2, padding=1, bias=use_bias)]
 
         mult = 2 ** n_downsampling
         for i in range(n_blocks):       # add ResNet blocks
@@ -968,7 +968,7 @@ class ResnetGenerator(nn.Module):
                           norm_layer(int(ngf * mult / 2)),
                           nn.ReLU(True)]
             else:
-                model += [Upsample(ngf * mult),
+                model += [nn.ConvTranspose2d(ngf * mult, ngf * mult, groups=3, kernel_size=4, stride=2, padding=1, bias=use_bias),
                           nn.Conv2d(ngf * mult, int(ngf * mult / 2),
                                     kernel_size=3, stride=1,
                                     padding=1,  # output_padding=1,
