@@ -968,7 +968,7 @@ class ResnetGenerator(nn.Module):
                           norm_layer(int(ngf * mult / 2)),
                           nn.ReLU(True)]
             else:
-                model += [nn.ConvTranspose2d(ngf * mult, ngf * mult, groups=2, kernel_size=4, stride=2, padding=1, bias=use_bias),
+                model += [nn.ConvTranspose2d(ngf * mult, ngf * mult, groups=1, kernel_size=4, stride=2, padding=1, bias=use_bias),
                           nn.Conv2d(ngf * mult, int(ngf * mult / 2),
                                     kernel_size=3, stride=1,
                                     padding=1,  # output_padding=1,
