@@ -1,11 +1,10 @@
 import numpy as np
 import torch
-
-import util.util as util
-from . import networks
 from .base_model import BaseModel
+from . import networks
 from .patchnce import PatchNCELoss
-
+import util.util as util
+from .DiffAugment_pytorch import DiffAugment
 policy = 'color,translation,cutout'
 class CUTModel(BaseModel):
     """ This class implements CUT and FastCUT model, described in the paper
@@ -161,10 +160,10 @@ class CUTModel(BaseModel):
         """Calculate GAN loss for the discriminator"""
         fake = self.fake_B.detach()
         # Fake; stop backprop to the generator by detaching fake_B
-        pred_fake = self.netD(fake)
+        pred_fake = self.netD(DiffAugment(fake, policy))
         self.loss_D_fake = self.criterionGAN(pred_fake, False).mean()
         # Real
-        self.pred_real = self.netD(self.real_B)
+        self.pred_real = self.netD(DiffAugment(self.real_B, policy))
         loss_D_real = self.criterionGAN(self.pred_real, True)
         self.loss_D_real = loss_D_real.mean()
 
@@ -177,7 +176,7 @@ class CUTModel(BaseModel):
         fake = self.fake_B
         # First, G(A) should fake the discriminator
         if self.opt.lambda_GAN > 0.0:
-            pred_fake = self.netD(fake)
+            pred_fake = self.netD(DiffAugment(fake, policy))
             self.loss_G_GAN = self.criterionGAN(pred_fake, True).mean() * self.opt.lambda_GAN
         else:
             self.loss_G_GAN = 0.0
